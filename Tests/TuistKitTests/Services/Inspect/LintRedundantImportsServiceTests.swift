@@ -12,7 +12,7 @@ import XCTest
 
 @testable import TuistKit
 
-final class LintImplicitImportsServiceTests: TuistUnitTestCase {
+final class LintRedundantImportsServiceTests: TuistUnitTestCase {
     private var configLoader: MockConfigLoading!
     private var generatorFactory: MockGeneratorFactorying!
     private var targetScanner: MockTargetImportsScanning!
@@ -45,18 +45,22 @@ final class LintImplicitImportsServiceTests: TuistUnitTestCase {
         // Given
         let path = try AbsolutePath(validating: "/project")
         let config = Config.test()
-        let app = Target.test(name: "App", product: .app)
         let framework = Target.test(name: "Framework", product: .framework)
+        let app = Target.test(name: "App", product: .app, dependencies: [TargetDependency.target(name: "Framework")])
         let project = Project.test(path: path, targets: [app, framework])
-        let graph = Graph.test(path: path, projects: [path: project])
+        let graph = Graph.test(path: path, projects: [path: project], dependencies: [
+            .target(name: app.name, path: project.path): [
+                .target(name: framework.name, path: project.path),
+            ],
+        ])
 
         given(configLoader).loadConfig(path: .value(path)).willReturn(config)
         given(generatorFactory).defaultGenerator(config: .value(config), sources: .any).willReturn(generator)
         given(generator).load(path: .value(path)).willReturn(graph)
-        given(targetScanner).imports(for: .value(app)).willReturn(Set(["Framework"]))
+        given(targetScanner).imports(for: .value(app)).willReturn(Set([]))
         given(targetScanner).imports(for: .value(framework)).willReturn(Set([]))
 
-        let expectedError = InspectImplicitImportsServiceError.implicitImportsFound([
+        let expectedError = InspectRedundantImportsServiceError.redundantImportsFound([
             InspectImportsServiceErrorIssue(target: "App", implicitDependencies: Set(["Framework"])),
         ])
 
@@ -68,18 +72,14 @@ final class LintImplicitImportsServiceTests: TuistUnitTestCase {
         // Given
         let path = try AbsolutePath(validating: "/project")
         let config = Config.test()
-        let app = Target.test(name: "App", product: .app)
         let framework = Target.test(name: "Framework", product: .framework)
+        let app = Target.test(name: "App", product: .app, dependencies: [TargetDependency.target(name: "Framework")])
         let project = Project.test(path: path, targets: [app, framework])
-        let graph = Graph.test(
-            path: path,
-
-            projects: [path: project],
-            dependencies: [.target(name: app.name, path: path): Set([.target(
-                name: framework.name,
-                path: path
-            )])]
-        )
+        let graph = Graph.test(path: path, projects: [path: project], dependencies: [
+            .target(name: app.name, path: project.path): [
+                .target(name: framework.name, path: project.path),
+            ],
+        ])
 
         given(configLoader).loadConfig(path: .value(path)).willReturn(config)
         given(generatorFactory).defaultGenerator(config: .value(config), sources: .any).willReturn(generator)
