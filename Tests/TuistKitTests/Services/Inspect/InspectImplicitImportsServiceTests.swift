@@ -61,7 +61,7 @@ final class LintImplicitImportsServiceTests: TuistUnitTestCase {
         ])
 
         // When
-        await XCTAssertThrowsSpecific({ try await subject.run(path: path.pathString, inspectType: .redundant) }, expectedError)
+        await XCTAssertThrowsSpecific({ try await subject.run(path: path.pathString, inspectType: .implicit) }, expectedError)
     }
 
     func test_run_doesntThrowAnyErrors_when_thereAreNoIssues() async throws {
@@ -88,6 +88,6 @@ final class LintImplicitImportsServiceTests: TuistUnitTestCase {
         given(targetScanner).imports(for: .value(framework)).willReturn(Set([]))
 
         // When
-        try await subject.run(path: path.pathString, inspectType: .redundant)
+        try await subject.run(path: path.pathString, inspectType: .implicit)
     }
 }
