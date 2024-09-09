@@ -99,8 +99,14 @@ final class InspectImportsService {
         graphTraverser: GraphTraverser,
         inspectType: InspectType
     ) async throws -> [InspectImportsServiceErrorIssue] {
-        let allTargets = graphTraverser
+        var allTargets = graphTraverser
             .allInternalTargets()
+
+        if inspectType == .redundant {
+            allTargets = allTargets.filter {
+                $0.target.product != .bundle
+            }
+        }
 
         let allTargetNames = Set(allTargets.map(\.target.productName))
 
