@@ -104,7 +104,10 @@ final class InspectImportsService {
 
         if inspectType == .redundant {
             allTargets = allTargets.filter {
-                $0.target.product != .bundle
+                switch $0.target.product {
+                case .staticLibrary, .staticFramework, .dynamicLibrary, .framework: true
+                default: false
+                }
             }
         }
 
